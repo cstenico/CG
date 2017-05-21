@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 #define max_enemies_x 5
 #define max_enemies_y 5
@@ -30,6 +31,10 @@ int msec_missel1 = 0, msec_missel2 = 0;
 int points = 0, lifes = 3;
 
 float start_x = -3.0, start_y = 5.0;
+
+char userPoints[] = {'P', 'O', 'I', 'N', 'T', 'S', ':', ' ', '0', '\0'};
+
+char userLifes[] = {'L', 'I', 'F', 'E', 'S', ':', ' ', '3', '\0'};
 
 enemy_t enemies[max_enemies_x][max_enemies_y];
 
@@ -315,6 +320,18 @@ void move_missel1(int passo){
 	}
 }
 
+void print(float x, float y, char *string){
+	//set the position of the text in the window using the x and y coordinates
+	glRasterPos2f(x,y);
+	//get the length of the string to display
+	int len = (int) strlen(string);
+
+	//loop to display character by character
+	for (int i = 0; i < len; i++){
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string[i]);
+	}
+}
+
 // Funcao callback de redesenho da janela de visualiza��o
 void Desenha(void)
 {
@@ -364,6 +381,8 @@ void Desenha(void)
 	//DesenhaInimigo(3, -3, 3);
 	DesenhaMatrizInimigos();
 
+	print(2, 5.3f, userLifes);
+	print(-3, 5.3f, userPoints);
 	// Executa os comandos OpenGL
 	glFlush();
 }
