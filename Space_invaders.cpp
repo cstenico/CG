@@ -17,6 +17,8 @@
 typedef struct{
 	int alive;
 	int type;
+	float x;
+	float y;
 }enemy_t;
 
 
@@ -38,11 +40,15 @@ char userLifes[] = {'L', 'I', 'F', 'E', 'S', ':', ' ', '3', '\0'};
 
 char over[] = {'G', 'A', 'M', 'E', ' ', 'O', 'V', 'E', 'R', '\0'};
 
+char win[] = {'Y', 'O', 'U', ' ', 'W', 'I', 'N', '\0'};
+
 enemy_t enemies[max_enemies_x][max_enemies_y];
 
 float distance_between_enemies_x = 1.2f, distance_between_enemies_y = 0.6f;
 
 float time_offset_x = 0, time_offset_y = 0;
+
+bool atingido = false;
 
 void init_enemies() {
 	int i, j;
@@ -51,6 +57,8 @@ void init_enemies() {
 		for(j = 0; j < max_enemies_y; j++) {
 			enemies[i][j].alive = 1;
 			enemies[i][j].type = aux;
+			enemies[i][j].x = 0.0f;
+			enemies[i][j].y = 0.0f;
 		}
 	}
 }
@@ -72,21 +80,6 @@ void timer(int count) {
 	glutTimerFunc(1000, timer, count + 1);
 }
 
-/*void move_missel1(int passo){
-
-	missel1_y += (1.0*passo)/100;
-	glutPostRedisplay();
-
-	glutTimerFunc(10, move_missel1, passo);
-}*/
-void move_missel2(int passo){
-
-	missel2_y += (1.0*passo)/100;
-	glutPostRedisplay();
-
-	glutTimerFunc(10, move_missel2, passo);
-}
-
 // Fun��o para desenhar a base do objeto
 void DesenhaNave()
 {
@@ -98,12 +91,13 @@ void DesenhaNave()
       glVertex2f(0.15f , -0.7f);
       glVertex2f(-0.15f, -0.7f);
     glEnd();
-		glBegin(GL_QUADS);
-	      glVertex2f(-0.05f,-0.7f );
-	      glVertex2f(0.05f , -0.7f );
-	      glVertex2f(0.05f , -0.65f);
-	      glVertex2f(-0.05f, -0.65f);
-	    glEnd();
+
+    glBegin(GL_QUADS);
+        glVertex2f(-0.05f,-0.7f );
+        glVertex2f(0.05f , -0.7f );
+        glVertex2f(0.05f , -0.65f);
+        glVertex2f(-0.05f, -0.65f);
+    glEnd();
 }
 
 void DesenhaInimigo(float offset_x, float offset_y, int type) {
@@ -278,6 +272,9 @@ void DesenhaMatrizInimigos() {
 			if(enemies[i][j].alive == 1) {
 				float aux_i = (float) i, aux_j = (float) j;
 				DesenhaInimigo(distance_between_enemies_x * aux_j + time_offset_x, -(distance_between_enemies_y * aux_i) - time_offset_y, aux);
+				enemies[i][j].x = distance_between_enemies_x * aux_j + time_offset_x + start_x;
+				enemies[i][j].y = -(distance_between_enemies_y * aux_i) - time_offset_y + start_y;
+        glutPostRedisplay();
 			}
 		}
 	}
@@ -296,26 +293,28 @@ void DesenhaMissel()
     glEnd();
 }
 
-void DesenhaMisseis(){
-
-	glColor3f(1.0f,0.0f,0.0f);
-	glLineWidth(2);
-	glBegin(GL_POLYGON);
-		glVertex2f(-1.0f,-1.0f);
-		glVertex2f(-1.0f,-0.7f);
-		glVertex2f(-0.9f,-0.6f);
-		glVertex2f(-0.8f,-0.7f);
-		glVertex2f(-0.8f,-1.0f);
-	glEnd();
-}
+// void DesenhaMisseis(){
+//
+// 	glColor3f(1.0f,0.0f,0.0f);
+// 	glLineWidth(2);
+// 	glBegin(GL_POLYGON);
+// 		glVertex2f(-1.0f,-1.0f);
+// 		glVertex2f(-1.0f,-0.7f);
+// 		glVertex2f(-0.9f,-0.6f);
+// 		glVertex2f(-0.8f,-0.7f);
+// 		glVertex2f(-0.8f,-1.0f);
+// 	glEnd();
+// }
 
 void move_missel1(int passo){
 
 	missel1_y += (1.0*passo)/100;
 	glutPostRedisplay();
-	if(missel1_y < 5 && missel1_moving)
+
+    if(missel1_y < 5 && missel1_moving)
 		glutTimerFunc(100, move_missel1, passo);
-  else{
+    else
+    {
 		missel1_moving = false;
 		missel1_y = 0;
 		DesenhaMissel();
@@ -342,10 +341,33 @@ void printGameOver(){
 
 	//loop to display character by character
 	for (int i = 0; i < len; i++){
-		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_36, over[i]);
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, over[i]);
 	}
 }
 
+void enemyDown(){
+	int i, j;
+	if(atingido == false){
+		for(i = 0; i < max_enemies_x; i++) {
+			for(j = 0; j < max_enemies_y; j++) {
+				if(enemies[i][j].alive == 1) {
+					if(missel1_tx > enemies[i][j].x
+						&& missel1_tx < enemies[i][j].x + 0.6
+						&& missel1_y < enemies[i][j].y
+						&& missel1_y > enemies[i][j].y - 0.3
+						&& missel1_tx + 0.1 > enemies[i][j].x
+						&& missel1_tx + 0.1 < enemies[i][j].x + 0.6){
+							atingido = true;
+							enemies[i][j].alive = 0;
+							missel1_moving = false;
+							points++;
+							printf("Tiro x %f tiro y %f verificacao x %f verifcacao y %f\n",missel1_tx, missel1_y, enemies[i][j].x, enemies[i][j].y);
+						}
+					}
+				}
+			}
+		}
+}
 
 // Funcao callback de redesenho da janela de visualiza��o
 void Desenha(void){
@@ -361,11 +383,13 @@ void Desenha(void){
 	if(gameover){
 		printGameOver();
 	}else{
-
-		glTranslatef(-aviao_ant,0.0f,0.0f);
-		glTranslatef(aviao_x,0.0f,0.0f);
 		glTranslatef(0.0f,-0.7f,0.0f);
 		glScalef(0.3f,0.3f,0.0f);
+    DesenhaMatrizInimigos();
+
+	//	glTranslatef(-aviao_ant,0.0f,0.0f);
+		glTranslatef(aviao_x,0.0f,0.0f);
+
 		glPushMatrix();
 
 		if(missel2_moving){
@@ -397,7 +421,7 @@ void Desenha(void){
 		//DesenhaInimigo(1, -1, 1);
 		//DesenhaInimigo(2, -2, 2);
 		//DesenhaInimigo(3, -3, 3);
-		DesenhaMatrizInimigos();
+		enemyDown();
 
 		print(2, 5.3f, userLifes);
 		print(-3, 5.3f, userPoints);
@@ -446,24 +470,24 @@ void TeclasEspeciais(int key, int x, int y)
 	if(key == GLUT_KEY_LEFT){
 		aviao_ant = aviao_x;
 		aviao_x-=0.05;
-		if ( aviao_x < -1.0f )
-			aviao_x = -1.0f;
+		if ( aviao_x < -3.3f )
+			aviao_x = -3.3f;
 	}
 	if(key == GLUT_KEY_RIGHT){
 		aviao_ant = aviao_x;
 		aviao_x += 0.05;
-		if (aviao_x > 1.0f)
-			aviao_x = 1.0f;
+		if (aviao_x > 3.3f)
+			aviao_x = 3.3f;
 	}
 	if(key == GLUT_KEY_UP){
-		missel1_moving = true;
-		missel1_tx = aviao_x;
-		glutTimerFunc(10, move_missel1, 1);
+// 		missel1_moving = true;
+// 		missel1_tx = aviao_x;
+// 		glutTimerFunc(10, move_missel1, 1);
 	}
 	if(key == GLUT_KEY_DOWN){
-		missel2_moving = true;
-		missel2_tx = aviao_x;
-		glutTimerFunc(10, move_missel2, 1);
+// 		missel2_moving = true;
+// 		missel2_tx = aviao_x;
+// 		glutTimerFunc(10, move_missel2, 1);
 	}
 
 
@@ -478,11 +502,13 @@ void Teclado(unsigned char key, int x, int y)
     if (key == 32)
     {
         missel1_moving = true;
-		//missel1_tx = aviao_x;
+		missel1_tx = aviao_x;
 		glutTimerFunc(10, move_missel1, 10);
+		atingido = false;
     }
     //glutPostRedisplay();
 }
+
 
 // Fun��o respons�vel por inicializar par�metros e vari�veis
 void Inicializa (void)
@@ -522,7 +548,7 @@ int main(int argc, char* argv[])
 	Inicializa();
 
 	glutTimerFunc(0, move_missel1, 0); // Timer para mover o missel 1
-	glutTimerFunc(0, move_missel2, 0); // ..........................2
+	glutTimerFunc(0, timer, 0); // ..........................2
 
 	// Inicia o processamento e aguarda intera��es do usu�rio
 	glutMainLoop();
