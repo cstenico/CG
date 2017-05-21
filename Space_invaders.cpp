@@ -24,7 +24,7 @@ typedef struct{
 GLfloat missel1_y = 0, missel2_y = 0;
 GLfloat aviao_x = 0, aviao_ant = 0, aux = 0, missel1_tx = 0, missel2_tx = 0;
 
-bool missel1_moving = false, missel2_moving = false;
+bool missel1_moving = false, missel2_moving = false, gameover = false;
 
 int msec_missel1 = 0, msec_missel2 = 0;
 
@@ -35,6 +35,8 @@ float start_x = -3.0, start_y = 5.0;
 char userPoints[] = {'P', 'O', 'I', 'N', 'T', 'S', ':', ' ', '0', '\0'};
 
 char userLifes[] = {'L', 'I', 'F', 'E', 'S', ':', ' ', '3', '\0'};
+
+char over[] = {'G', 'A', 'M', 'E', ' ', 'O', 'V', 'E', 'R', '\0'};
 
 enemy_t enemies[max_enemies_x][max_enemies_y];
 
@@ -332,9 +334,22 @@ void print(float x, float y, char *string){
 	}
 }
 
+void printGameOver(){
+	//set the position of the text in the window using the x and y coordinates
+	glRasterPos2f(-2,2.5f);
+	//get the length of the string to display
+	int len = (int) strlen(over);
+
+	//loop to display character by character
+	for (int i = 0; i < len; i++){
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_36, over[i]);
+	}
+}
+
+
 // Funcao callback de redesenho da janela de visualiza��o
-void Desenha(void)
-{
+void Desenha(void){
+
 	// Muda para o sistema de coordenadas do modelo
 	glMatrixMode(GL_MODELVIEW);
 	// Inicializa a matriz de transforma��o corrente
@@ -343,48 +358,52 @@ void Desenha(void)
 	// Limpa a janela de visualizacao com a cor
 	// de fundo definida previamente
 	glClear(GL_COLOR_BUFFER_BIT);
+	if(gameover){
+		printGameOver();
+	}else{
 
-	glTranslatef(-aviao_ant,0.0f,0.0f);
-	glTranslatef(aviao_x,0.0f,0.0f);
-	glTranslatef(0.0f,-0.7f,0.0f);
-	glScalef(0.3f,0.3f,0.0f);
-	glPushMatrix();
+		glTranslatef(-aviao_ant,0.0f,0.0f);
+		glTranslatef(aviao_x,0.0f,0.0f);
+		glTranslatef(0.0f,-0.7f,0.0f);
+		glScalef(0.3f,0.3f,0.0f);
+		glPushMatrix();
 
-	if(missel2_moving){
-		glTranslatef(-aviao_x,0.0f,0.0f);
-		glTranslatef(missel2_tx,0.0f,0.0f);
+		if(missel2_moving){
+			glTranslatef(-aviao_x,0.0f,0.0f);
+			glTranslatef(missel2_tx,0.0f,0.0f);
+		}
+
+		//M�ssel 2;
+		//glTranslatef(0.0f,missel2_y,0.0f);
+		//glTranslatef(1.8f,0.0f,0.0f);
+		//DesenhaMissel();
+
+		glPopMatrix(); // Carrega a identidade = Limpa a matrix de transforma��es.
+		glPushMatrix();
+
+		if(missel1_moving){
+			glTranslatef(-aviao_x,0.0f,0.0f);
+			glTranslatef(missel1_tx,0.0f,0.0f);
+		}
+		//M�ssel 1.
+		glTranslatef(0.0f,missel1_y,0.0f);
+		DesenhaMissel();
+
+		glPopMatrix(); //Pro jatinho nao sair junto com o missel 1.
+		// Desenha o jatinho.
+		DesenhaNave();
+		glPopMatrix();
+		glPopMatrix();
+		//DesenhaInimigo(1, -1, 1);
+		//DesenhaInimigo(2, -2, 2);
+		//DesenhaInimigo(3, -3, 3);
+		DesenhaMatrizInimigos();
+
+		print(2, 5.3f, userLifes);
+		print(-3, 5.3f, userPoints);
+		// Executa os comandos OpenGL
+		glFlush();
 	}
-
-	//M�ssel 2;
-	//glTranslatef(0.0f,missel2_y,0.0f);
-	//glTranslatef(1.8f,0.0f,0.0f);
-	//DesenhaMissel();
-
-	glPopMatrix(); // Carrega a identidade = Limpa a matrix de transforma��es.
-	glPushMatrix();
-
-	if(missel1_moving){
-		glTranslatef(-aviao_x,0.0f,0.0f);
-		glTranslatef(missel1_tx,0.0f,0.0f);
-	}
-	//M�ssel 1.
-	glTranslatef(0.0f,missel1_y,0.0f);
-	DesenhaMissel();
-
-	glPopMatrix(); //Pro jatinho nao sair junto com o missel 1.
-	// Desenha o jatinho.
-	DesenhaNave();
-	glPopMatrix();
-	glPopMatrix();
-	//DesenhaInimigo(1, -1, 1);
-	//DesenhaInimigo(2, -2, 2);
-	//DesenhaInimigo(3, -3, 3);
-	DesenhaMatrizInimigos();
-
-	print(2, 5.3f, userLifes);
-	print(-3, 5.3f, userPoints);
-	// Executa os comandos OpenGL
-	glFlush();
 }
 
 // Fun��o callback chamada quando o tamanho da janela � alterado
