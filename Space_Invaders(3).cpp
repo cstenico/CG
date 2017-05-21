@@ -374,7 +374,7 @@ void print(float x, float y, char *string){
 
 void printGameOver(){
     glClear(GL_COLOR_BUFFER_BIT);
-
+    
     glColor3f(0.0f,0.0f,1.0f);
 
 	//set the position of the text in the window using the x and y coordinates
@@ -450,7 +450,7 @@ void invasion(){
                     printf("GAME OVER\n");
                     gameover = true;
                 }
-            }
+            }       
         }
     }
 }
@@ -458,16 +458,16 @@ void invasion(){
 void enemyShoot()
 {
     float x = -100, y = -100, dist = 1000;
-
+    
     if(shoot && !missel2_moving)
     {
         int i, j;
-        for(j = 0; j < max_enemies_x; j++)
+        for(j = 0; j < max_enemies_x; j++) 
         {
             i = max_enemies_y;
             while(enemies[i][j].alive != 1 && i>=0)
                 i--;
-
+                
             if(i>=0 & (abs(enemies[i][j].x - aviao_x) < dist) || (enemies[i][j].x - aviao_x == 0))
             {
                     dist = abs(enemies[i][j].x - aviao_x);
@@ -532,7 +532,7 @@ void Desenha(void){
             //M�ssel 2;
             glTranslatef(0.0f,missel2_y,0.0f);
             DesenhaMisselInimigo();
-
+           
         }
         bangbang();
 		glPopMatrix(); // Carrega a identidade = Limpa a matrix de transforma��es.
@@ -640,7 +640,7 @@ void Teclado(unsigned char key, int x, int y)
             missel1_tx = aviao_x;
             glutTimerFunc(10, move_missel1, 10);
             atingido = false;
-
+            
         }
     }
     //glutPostRedisplay();
