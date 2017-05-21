@@ -34,13 +34,7 @@ int points = 0, lifes = 3;
 
 float start_x = -3.0, start_y = 5.0;
 
-int num = 10;
-
-char buffer[10]={'\0'};
-
-//sprintf(buffer, "%d", num);
-
-char userPoints[] = {'P', 'O', 'I', 'N', 'T', 'S', ':', ' ', '0', '0', '\0'};
+char userPoints[] = {'P', 'O', 'I', 'N', 'T', 'S', ':', ' ', '0', '\0'};
 
 char userLifes[] = {'L', 'I', 'F', 'E', 'S', ':', ' ', '3', '\0'};
 
@@ -54,11 +48,7 @@ float distance_between_enemies_x = 1.2f, distance_between_enemies_y = 0.6f;
 
 float time_offset_x = 0, time_offset_y = 0;
 
-bool atingido = false;		//verifica se tiro atingiu alguém
-
-bool conquest = false;		//verifica se matriz inimiga chegou na nave
-
-bool destroyed = false;		//verifica se todos os inimigos foram destruidos
+bool atingido = false, shoot = false;
 
 void init_enemies() {
 	int i, j;
@@ -82,8 +72,10 @@ void timer(int count) {
 	} else {
 		if((count / 5) % 2 == 0) {
 			time_offset_x += 0.1f;
+            if(!missel1_moving) shoot = true;
 		} else {
 			time_offset_x -= 0.1f;
+            if(!missel1_moving) shoot = false;
 		}
 	}
 
@@ -303,18 +295,17 @@ void DesenhaMissel()
     glEnd();
 }
 
-// void DesenhaMisseis(){
-//
-// 	glColor3f(1.0f,0.0f,0.0f);
-// 	glLineWidth(2);
-// 	glBegin(GL_POLYGON);
-// 		glVertex2f(-1.0f,-1.0f);
-// 		glVertex2f(-1.0f,-0.7f);
-// 		glVertex2f(-0.9f,-0.6f);
-// 		glVertex2f(-0.8f,-0.7f);
-// 		glVertex2f(-0.8f,-1.0f);
-// 	glEnd();
-// }
+void DesenhaMisselInimigo()
+{
+  glColor3f(0.0f,0.0f,1.0f);
+	glLineWidth(2);
+	glBegin(GL_QUADS);
+      glVertex2f(-0.05f,-1.0f );
+      glVertex2f(0.05f , -1.0f );
+      glVertex2f(0.05f , -0.8f);
+      glVertex2f(-0.05f, -0.8f);
+    glEnd();
+}
 
 void move_missel1(int passo){
 
@@ -328,6 +319,32 @@ void move_missel1(int passo){
 		missel1_moving = false;
 		missel1_y = 0;
 		DesenhaMissel();
+	}
+}
+
+
+void move_missel2(int passo){
+
+	missel2_y -= (1.0*passo)/100;
+	glutPostRedisplay();
+
+    if(missel2_y > -1 && missel2_moving)
+    {
+        printf("moving %d, my %f mx %f ax %f \n", missel2_moving, missel2_y, missel2_tx, aviao_x);
+        if(missel2_moving && missel2_y <= -0.7 && missel2_y>=-1 && missel2_tx<aviao_x+1 && missel2_tx > aviao_x-1)
+        {
+            lifes--;
+            missel2_moving = false;
+            printf("vidas %d \n", lifes);
+            glutPostRedisplay();
+        }
+		glutTimerFunc(100, move_missel2, passo);
+    }
+    else
+    {
+		missel2_moving = false;
+        missel2_tx = 0;
+        missel2_y  = 0;
 	}
 }
 
@@ -362,23 +379,16 @@ void enemyDown(){
 			for(j = 0; j < max_enemies_y; j++) {
 				if(enemies[i][j].alive == 1) {
 					if(missel1_tx > enemies[i][j].x
-						&& missel1_tx < enemies[i][j].x + 0.5
+						&& missel1_tx < enemies[i][j].x + 0.6
 						&& missel1_y < enemies[i][j].y
-						&& missel1_y > enemies[i][j].y - 0.2
+						&& missel1_y > enemies[i][j].y - 0.3
 						&& missel1_tx + 0.1 > enemies[i][j].x
-						&& missel1_tx + 0.1 < enemies[i][j].x + 0.5){
+						&& missel1_tx + 0.1 < enemies[i][j].x + 0.6){
 							atingido = true;
 							enemies[i][j].alive = 0;
 							missel1_moving = false;
 							points++;
-							itoa (points, buffer, 10);
-							if(points < 10){
-								userPoints[9] = buffer[0];
-							}else{
-								userPoints[8] = buffer[0];
-								userPoints[9] = buffer[1];
-							}
-							printf("Tiro x %f tiro y %f verificacao x %f verifcacao y %f\n",missel1_tx, missel1_y, enemies[i][j].x, enemies[i][j].y);
+							//printf("Tiro x %f tiro y %f verificacao x %f verifcacao y %f\n",missel1_tx, missel1_y, enemies[i][j].x, enemies[i][j].y);
 						}
 					}
 				}
@@ -386,19 +396,40 @@ void enemyDown(){
 		}
 }
 
-void invasion(){
-	int i, j;
-	for(i = 0; i < max_enemies_x; i++) {
-		for(j = 0; j < max_enemies_y; j++) {
-			if(enemies[i][j].alive == 1) {
-				if(enemies[i][j].y == -0.7f){
-					gameover = true;
-				}
-			}
-		}
-	}
+void enemyShoot()
+{
+    float x = -100, y = -100, dist = 1000;
+    
+    if(shoot && !missel2_moving)
+    {
+        int i, j;
+        for(j = 0; j < max_enemies_x; j++) 
+        {
+            i = max_enemies_y;
+            while(enemies[i][j].alive != 1 && i>=0)
+                i--;
+                
+            if(i>=0 & (abs(enemies[i][j].x - aviao_x) < dist) || (enemies[i][j].x - aviao_x == 0))
+            {
+                    dist = abs(enemies[i][j].x - aviao_x);
+                    x = enemies[i][j].x;
+                    y = enemies[i][j].y;
+            }
+        }
+        if(x == -100 || y == -100)
+        {
+            //NAO TEM MAIS INIMIGOS JOGO GANHO
+        }
+        else
+        {
+            //printf("Tiro x %f tiro y %f \n",x, y);
+            missel2_tx = x;
+            missel2_y  = y;
+            missel2_moving = true;
+            glutTimerFunc(10, move_missel2, 10);
+        }
+    }
 }
-
 // Funcao callback de redesenho da janela de visualiza��o
 void Desenha(void){
 
@@ -410,28 +441,34 @@ void Desenha(void){
 	// Limpa a janela de visualizacao com a cor
 	// de fundo definida previamente
 	glClear(GL_COLOR_BUFFER_BIT);
-	if(gameover){
+	if(gameover)
+    {
 		printGameOver();
-	}else{
+	}
+	else
+    {
 		glTranslatef(0.0f,-0.7f,0.0f);
 		glScalef(0.3f,0.3f,0.0f);
-    DesenhaMatrizInimigos();
+        DesenhaMatrizInimigos();
 
-	//	glTranslatef(-aviao_ant,0.0f,0.0f);
+        print(2, 5.3f, userLifes);
+		print(-3, 5.3f, userPoints);
 		glTranslatef(aviao_x,0.0f,0.0f);
 
 		glPushMatrix();
 
-		if(missel2_moving){
-			glTranslatef(-aviao_x,0.0f,0.0f);
-			glTranslatef(missel2_tx,0.0f,0.0f);
-		}
+        if(shoot)
+        {
+            if(missel2_moving){
+                glTranslatef(-aviao_x,0.0f,0.0f);
+                glTranslatef(missel2_tx,0.0f,0.0f);
+            }
 
-		//M�ssel 2;
-		//glTranslatef(0.0f,missel2_y,0.0f);
-		//glTranslatef(1.8f,0.0f,0.0f);
-		//DesenhaMissel();
-
+            //M�ssel 2;
+            glTranslatef(0.0f,missel2_y,0.0f);
+            glTranslatef(1.8f,0.0f,0.0f);
+            DesenhaMisselInimigo();
+        }
 		glPopMatrix(); // Carrega a identidade = Limpa a matrix de transforma��es.
 		glPushMatrix();
 
@@ -452,16 +489,14 @@ void Desenha(void){
 		//DesenhaInimigo(2, -2, 2);
 		//DesenhaInimigo(3, -3, 3);
 		enemyDown();
-		invasion();
+        enemyShoot();
 
-		print(2, 5.3f, userLifes);
-		print(-3, 5.3f, userPoints);
 		// Executa os comandos OpenGL
 		glFlush();
 	}
 }
 
-// Função callback chamada quando o tamanho da janela � alterado
+// Fun��o callback chamada quando o tamanho da janela � alterado
 void AlteraTamanhoJanela(GLsizei w, GLsizei h)
 {
 	GLsizei largura, altura;
@@ -579,6 +614,7 @@ int main(int argc, char* argv[])
 	Inicializa();
 
 	glutTimerFunc(0, move_missel1, 0); // Timer para mover o missel 1
+    glutTimerFunc(0, move_missel2, 0);
 	glutTimerFunc(0, timer, 0); // ..........................2
 
 	// Inicia o processamento e aguarda intera��es do usu�rio
