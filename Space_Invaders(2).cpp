@@ -330,7 +330,7 @@ void move_missel2(int passo){
 
     if(missel2_y > -1 && missel2_moving)
     {
-
+        
         if(missel2_moving && missel2_y <= -0.7 && missel2_y>=-1 && missel2_tx<aviao_x+0.5 && missel2_tx > aviao_x-0.5)
         {
             lifes--;
@@ -439,7 +439,7 @@ void invasion(){
                     printf("GAME OVER\n");
                     gameover = true;
                 }
-            }
+            }       
         }
     }
 }
@@ -447,16 +447,16 @@ void invasion(){
 void enemyShoot()
 {
     float x = -100, y = -100, dist = 1000;
-
+    
     if(shoot && !missel2_moving)
     {
         int i, j;
-        for(j = 0; j < max_enemies_x; j++)
+        for(j = 0; j < max_enemies_x; j++) 
         {
             i = max_enemies_y;
             while(enemies[i][j].alive != 1 && i>=0)
                 i--;
-
+                
             if(i>=0 & (abs(enemies[i][j].x - aviao_x) < dist) || (enemies[i][j].x - aviao_x == 0))
             {
                     dist = abs(enemies[i][j].x - aviao_x);
@@ -621,7 +621,7 @@ void Teclado(unsigned char key, int x, int y)
             missel1_tx = aviao_x;
             glutTimerFunc(10, move_missel1, 10);
             atingido = false;
-
+            
         }
     }
     //glutPostRedisplay();
