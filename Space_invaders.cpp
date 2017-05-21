@@ -1,3 +1,7 @@
+/* Camila Stenico dos Santos 8530952
+	 Gustavo Lima Lopes 8910142
+	 Verônica Vannini 8517369 */
+
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
